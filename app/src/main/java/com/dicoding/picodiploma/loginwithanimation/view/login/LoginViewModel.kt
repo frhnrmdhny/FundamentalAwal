@@ -17,6 +17,9 @@ class LoginViewModel(private val repository: UserRepository) : ViewModel() {
     private val _isLoading = MutableLiveData<Boolean>()
     val isLoading: LiveData<Boolean> get() = _isLoading
 
+    private val _errorMessage = MutableLiveData<String>()
+    val errorMessage: LiveData<String> get() = _errorMessage
+
     data class LoginResult(
         val isSuccessful: Boolean,
         val message: String,
@@ -44,8 +47,8 @@ class LoginViewModel(private val repository: UserRepository) : ViewModel() {
                         LoginResult(true, "Login berhasil", response.loginResult.token)
                 }
             } catch (e: Exception) {
-                Log.e("LoginViewModel", "Login gagal: ${e.localizedMessage}", e)
-                _loginResult.value = LoginResult(false, "Error!, harap coba lagi nanti.")
+                _errorMessage.value = "Login gagal: ${e.localizedMessage}"
+                _loginResult.value = LoginResult(false, "Error! Harap coba lagi nanti.")
             } finally {
                 _isLoading.value = false
             }

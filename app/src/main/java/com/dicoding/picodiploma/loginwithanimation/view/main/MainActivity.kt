@@ -28,7 +28,7 @@ class MainActivity : AppCompatActivity() {
 
         viewModel.getSession().observe(this) { user ->
             if (!user.isLogin) {
-                startActivity(Intent(this, HomeActivity::class.java))
+                    startActivity(Intent(this, WelcomeActivity::class.java))
                 finish()
             } else {
                 startActivity(Intent(this@MainActivity, WelcomeActivity::class.java))

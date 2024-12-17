@@ -6,9 +6,11 @@ import android.os.Bundle
 import android.util.Log
 import android.view.WindowInsets
 import android.view.WindowManager
+import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Observer
 import com.dicoding.picodiploma.loginwithanimation.databinding.ActivityLoginBinding
 import com.dicoding.picodiploma.loginwithanimation.view.ViewModelFactory
 import com.dicoding.picodiploma.loginwithanimation.view.home.HomeActivity
@@ -26,8 +28,10 @@ class LoginActivity : AppCompatActivity() {
 
         setupView()
         setupAction()
-
+        setupObservers()
     }
+
+
 
     private fun setupView() {
         @Suppress("DEPRECATION")
@@ -54,7 +58,7 @@ class LoginActivity : AppCompatActivity() {
         viewModel.loginResult.observe(this) { result ->
             if (result.isSuccessful) {
                 val token = result.token
-                Log.d("LoginActivity", "Token yang diterima: $token")
+                Log.d("LoginActivity", "Token : $token")
                 val intent = Intent(this, HomeActivity::class.java)
                 intent.putExtra("TOKEN", token)
                 startActivity(intent)
@@ -71,6 +75,22 @@ class LoginActivity : AppCompatActivity() {
             val password = binding.passwordEditText.text.toString()
             viewModel.login(email, password)
         }
+    }
+
+    private fun setupObservers() {
+        viewModel.loginResult.observe(this, Observer { result ->
+            if (result.isSuccessful) {
+                Toast.makeText(this, result.message, Toast.LENGTH_SHORT).show()
+            }
+        })
+
+        viewModel.errorMessage.observe(this, Observer { errorMessage ->
+            Toast.makeText(this, errorMessage, Toast.LENGTH_LONG).show()
+        })
+
+        viewModel.isLoading.observe(this, Observer { isLoading ->
+
+        })
     }
 
 
