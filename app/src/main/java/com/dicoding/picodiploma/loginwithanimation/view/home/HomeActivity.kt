@@ -2,11 +2,9 @@ package com.dicoding.picodiploma.loginwithanimation.view.home
 
 import android.content.Intent
 import android.os.Bundle
-import android.view.MenuItem
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
-import com.dicoding.picodiploma.loginwithanimation.R
 import com.dicoding.picodiploma.loginwithanimation.data.pref.UserPreference
 import com.dicoding.picodiploma.loginwithanimation.data.pref.dataStore
 import com.dicoding.picodiploma.loginwithanimation.databinding.ActivityHomeBinding
@@ -23,25 +21,23 @@ class HomeActivity : AppCompatActivity() {
         binding = ActivityHomeBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        setSupportActionBar(binding.topAppBar)
+        setSupportActionBar(binding.toolbar)
 
         binding.fab.setOnClickListener {
             val intent = Intent(this, StoryActivity::class.java)
             startActivity(intent)
+
+            setupActions()
         }
 
     }
 
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            R.id.btnLogout -> {
-                logout()
-                true
-            }
-
-            else -> super.onOptionsItemSelected(item)
+    private fun setupActions() {
+        binding.toolbar.setNavigationOnClickListener {
+            logout()
         }
     }
+
 
     private fun logout() {
         val userPreference = UserPreference.getInstance(applicationContext.dataStore)
