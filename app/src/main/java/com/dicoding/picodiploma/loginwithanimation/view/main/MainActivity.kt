@@ -1,7 +1,6 @@
 package com.dicoding.picodiploma.loginwithanimation.view.main
 
-import android.animation.AnimatorSet
-import android.animation.ObjectAnimator
+
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
@@ -12,8 +11,8 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import com.dicoding.picodiploma.loginwithanimation.databinding.ActivityMainBinding
 import com.dicoding.picodiploma.loginwithanimation.view.ViewModelFactory
-import com.dicoding.picodiploma.loginwithanimation.view.home.HomeActivity
 import com.dicoding.picodiploma.loginwithanimation.view.welcome.WelcomeActivity
+
 
 class MainActivity : AppCompatActivity() {
     private val viewModel by viewModels<MainViewModel> {
@@ -28,7 +27,7 @@ class MainActivity : AppCompatActivity() {
 
         viewModel.getSession().observe(this) { user ->
             if (!user.isLogin) {
-                    startActivity(Intent(this, WelcomeActivity::class.java))
+                startActivity(Intent(this, WelcomeActivity::class.java))
                 finish()
             } else {
                 startActivity(Intent(this@MainActivity, WelcomeActivity::class.java))
@@ -36,8 +35,10 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+
         setupView()
         setupAction()
+
     }
 
     private fun setupView() {

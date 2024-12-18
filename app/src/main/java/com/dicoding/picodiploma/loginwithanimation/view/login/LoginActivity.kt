@@ -4,13 +4,14 @@ import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import android.view.WindowInsets
 import android.view.WindowManager
+import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.Observer
 import com.dicoding.picodiploma.loginwithanimation.databinding.ActivityLoginBinding
 import com.dicoding.picodiploma.loginwithanimation.view.ViewModelFactory
 import com.dicoding.picodiploma.loginwithanimation.view.home.HomeActivity
@@ -20,18 +21,20 @@ class LoginActivity : AppCompatActivity() {
         ViewModelFactory.getInstance(this)
     }
     private lateinit var binding: ActivityLoginBinding
+    private lateinit var progressBar: ProgressBar
+    private var alertDialog: AlertDialog? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        progressBar = binding.progressBar
+
         setupView()
         setupAction()
         setupObservers()
     }
-
-
 
     private fun setupView() {
         @Suppress("DEPRECATION")
@@ -47,51 +50,58 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun showErrorDialog(message: String) {
-        AlertDialog.Builder(this)
+        alertDialog?.dismiss()
+        alertDialog = AlertDialog.Builder(this)
             .setTitle("Gagal Login!")
             .setMessage(message)
             .setPositiveButton("OK", null)
-            .show()
-    }
-
-    private fun observeLoginResult() {
-        viewModel.loginResult.observe(this) { result ->
-            if (result.isSuccessful) {
-                val token = result.token
-                Log.d("LoginActivity", "Token : $token")
-                val intent = Intent(this, HomeActivity::class.java)
-                intent.putExtra("TOKEN", token)
-                startActivity(intent)
-                finish()
-            } else {
-                showErrorDialog(result.message)
-            }
-        }
+            .create()
+        alertDialog?.show()
     }
 
     private fun setupAction() {
         binding.loginButton.setOnClickListener {
             val email = binding.emailEditText.text.toString()
             val password = binding.passwordEditText.text.toString()
+
+            if (email.isEmpty() || password.isEmpty()) {
+                showErrorDialog("Email dan password harus diisi!")
+                return@setOnClickListener
+            }
+
             viewModel.login(email, password)
         }
     }
 
     private fun setupObservers() {
-        viewModel.loginResult.observe(this, Observer { result ->
+        viewModel.loginResult.observe(this) { result ->
             if (result.isSuccessful) {
-                Toast.makeText(this, result.message, Toast.LENGTH_SHORT).show()
+                val token = result.token
+                Log.d("LoginActivity", "Token : $token")
+                val intent = Intent(this, HomeActivity::class.java).apply {
+                    putExtra("TOKEN", token)
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                }
+                startActivity(intent)
+                finish()
+            } else {
+                showErrorDialog(result.message)
             }
-        })
+        }
 
-        viewModel.errorMessage.observe(this, Observer { errorMessage ->
+        viewModel.isLoading.observe(this) { isLoading ->
+            progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+            binding.loginButton.isEnabled = !isLoading
+        }
+
+        viewModel.errorMessage.observe(this) { errorMessage ->
             Toast.makeText(this, errorMessage, Toast.LENGTH_LONG).show()
-        })
-
-        viewModel.isLoading.observe(this, Observer { isLoading ->
-
-        })
+        }
     }
 
-
+    override fun onDestroy() {
+        super.onDestroy()
+        alertDialog?.dismiss() // Hapus referensi dialog
+        alertDialog = null
+    }
 }

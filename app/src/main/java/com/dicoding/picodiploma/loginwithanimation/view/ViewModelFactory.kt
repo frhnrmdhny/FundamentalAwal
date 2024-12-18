@@ -38,7 +38,7 @@ class ViewModelFactory private constructor(private val repository: UserRepositor
         @JvmStatic
         fun getInstance(context: Context): ViewModelFactory {
             return INSTANCE ?: synchronized(this) {
-                val userRepository = Injection.provideRepository(context)
+                val userRepository = Injection.provideUserRepository(context)
                 ViewModelFactory(userRepository).also {
                     INSTANCE = it
                 }

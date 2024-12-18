@@ -8,14 +8,12 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "session")
 
 class UserPreference private constructor(private val dataStore: DataStore<Preferences>) {
 
-    private val passwordKey = stringPreferencesKey("password")
     private val tokenKey = stringPreferencesKey("token")
 
     suspend fun saveSession(user: UserModel) {
@@ -46,29 +44,15 @@ class UserPreference private constructor(private val dataStore: DataStore<Prefer
         }
     }
 
-    suspend fun getPassword(): String? {
-        val preferences = dataStore.data.first()
-        return preferences[passwordKey]
-    }
-
-    suspend fun getToken(): String? {
-        val preferences = dataStore.data.first()
-        return preferences[tokenKey]
+    fun getUserToken(): Flow<String> {
+        return dataStore.data.map { preferences ->
+            preferences[TOKEN_KEY] ?: ""
+        }
     }
 
     suspend fun logout() {
         dataStore.edit { preferences ->
-            preferences.remove(TOKEN_KEY)
-            preferences.remove(EMAIL_KEY)
-            preferences.remove(IS_LOGIN_KEY)
-        }
-    }
-
-    suspend fun clearToken() {
-        dataStore.edit { preferences ->
-            preferences.remove(TOKEN_KEY)
-            preferences.remove(EMAIL_KEY)
-            preferences.remove(IS_LOGIN_KEY)
+            preferences.clear()
         }
     }
 

@@ -1,7 +1,5 @@
 package com.dicoding.picodiploma.loginwithanimation.view.signup
 
-import android.animation.AnimatorSet
-import android.animation.ObjectAnimator
 import android.os.Build
 import android.os.Bundle
 import android.view.View
@@ -17,6 +15,7 @@ import com.dicoding.picodiploma.loginwithanimation.view.ViewModelFactory
 class SignupActivity : AppCompatActivity() {
     private lateinit var binding: ActivitySignupBinding
     private lateinit var signupViewModel: SignupViewModel
+    private var alertDialog: AlertDialog? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,7 +29,12 @@ class SignupActivity : AppCompatActivity() {
 
     private fun setupViewModel() {
         val factory = ViewModelFactory.getInstance(this)
-        var signupViewModel = ViewModelProvider(this, factory)[SignupViewModel::class.java]
+        signupViewModel = ViewModelProvider(this, factory)[SignupViewModel::class.java]
+
+        // Observe loading state
+        signupViewModel.isLoading.observe(this) { isLoading ->
+            toggleProgressBar(isLoading)
+        }
     }
 
     private fun setupView() {
@@ -53,24 +57,47 @@ class SignupActivity : AppCompatActivity() {
             val password = binding.passwordEditText.text.toString()
 
             if (name.isEmpty() || email.isEmpty() || password.isEmpty()) {
-                Toast.makeText(this, "Error! semua harus diisi dengan benar!", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Error! Semua harus diisi dengan benar!", Toast.LENGTH_SHORT)
+                    .show()
                 return@setOnClickListener
             }
+
+            // Trigger register logic
             signupViewModel.register(name, email, password)
 
-            signupViewModel.registerResponse.observe(this) { response ->
+            signupViewModel.registerResponse.observe(this@SignupActivity) { response ->
                 if (!response.error) {
-                    AlertDialog.Builder(this).apply {
-                        setTitle("Yeah!")
-                        setMessage("Akun berhasil dibuat. Silahkan Login!")
-                        setPositiveButton("Login") { _, _ -> finish() }
-                        create()
-                        show()
-                    }
+                    showSuccessDialog()
+                    signupViewModel.registerResponse.removeObservers(this@SignupActivity)
                 } else {
-                    Toast.makeText(this, "Error! Pendaftaran gagal: ${response.message}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        this,
+                        "Error! Pendaftaran gagal: ${response.message}",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             }
         }
     }
+
+    private fun toggleProgressBar(isLoading: Boolean) {
+        binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+        binding.signupButton.isEnabled = !isLoading
+    }
+
+    private fun showSuccessDialog() {
+        alertDialog = AlertDialog.Builder(this).apply {
+            setTitle("Yeah!")
+            setMessage("Akun berhasil dibuat. Silahkan Login!")
+            setPositiveButton("Login") { _, _ -> finish() }
+        }.create()
+        alertDialog?.show()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        alertDialog?.dismiss()
+        alertDialog = null
+    }
 }
+

@@ -19,18 +19,12 @@ class UserRepository private constructor(
     suspend fun saveSession(user: UserModel) {
         userPreference.saveSession(user)
     }
-
-    suspend fun saveToken(token: String) {
-        userPreference.saveToken(token)
-    }
+    
 
     fun getSession(): Flow<UserModel> {
         return userPreference.getSession()
     }
 
-    fun getUserSession(): Flow<UserModel> {
-        return userPreference.getSession()
-    }
 
     suspend fun logout() {
         userPreference.logout()
