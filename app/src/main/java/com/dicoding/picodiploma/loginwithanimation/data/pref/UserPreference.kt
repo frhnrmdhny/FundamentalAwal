@@ -8,34 +8,44 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "session")
 
 class UserPreference private constructor(private val dataStore: DataStore<Preferences>) {
 
+    private val passwordKey = stringPreferencesKey("token")
     private val tokenKey = stringPreferencesKey("token")
 
     suspend fun saveSession(user: UserModel) {
         dataStore.edit { preferences ->
             preferences[EMAIL_KEY] = user.email
             preferences[TOKEN_KEY] = user.token
-            preferences[NAME_KEY] = user.name
-            preferences[USER_ID_KEY] = user.userId
-            preferences[IS_LOGIN_KEY] = user.isLogin
+            preferences[PASSWORD_KEY] = user.password
+            preferences[IS_LOGIN_KEY] = true
         }
     }
 
     fun getSession(): Flow<UserModel> {
         return dataStore.data.map { preferences ->
             UserModel(
-                email = preferences[EMAIL_KEY] ?: "",
-                token = preferences[TOKEN_KEY] ?: "",
-                userId = preferences[USER_ID_KEY] ?: "",
-                name = preferences[NAME_KEY] ?: "",
-                isLogin = preferences[IS_LOGIN_KEY] ?: false
+                preferences[EMAIL_KEY] ?: "",
+                preferences[TOKEN_KEY] ?: "",
+                preferences[PASSWORD_KEY] ?: "",
+                preferences[IS_LOGIN_KEY] ?: false
             )
         }
+    }
+
+    suspend fun getToken(): String? {
+        val preferences = dataStore.data.first()
+        return preferences[tokenKey]
+    }
+
+    suspend fun getPassword(): String? {
+        val preferences = dataStore.data.first()
+        return preferences[passwordKey]
     }
 
     suspend fun saveToken(token: String) {
@@ -44,11 +54,6 @@ class UserPreference private constructor(private val dataStore: DataStore<Prefer
         }
     }
 
-    fun getUserToken(): Flow<String> {
-        return dataStore.data.map { preferences ->
-            preferences[TOKEN_KEY] ?: ""
-        }
-    }
 
     suspend fun logout() {
         dataStore.edit { preferences ->
@@ -56,15 +61,22 @@ class UserPreference private constructor(private val dataStore: DataStore<Prefer
         }
     }
 
+    suspend fun clearToken() {
+        dataStore.edit { preferences ->
+            preferences.remove(TOKEN_KEY)
+            preferences.remove(PASSWORD_KEY)
+            preferences.remove(EMAIL_KEY)
+            preferences.remove(IS_LOGIN_KEY)
+        }
+    }
+
 
     companion object {
         @Volatile
         private var INSTANCE: UserPreference? = null
-
         private val EMAIL_KEY = stringPreferencesKey("email")
         private val TOKEN_KEY = stringPreferencesKey("token")
-        private val USER_ID_KEY = stringPreferencesKey("userId")
-        private val NAME_KEY = stringPreferencesKey("name")
+        private val PASSWORD_KEY = stringPreferencesKey("password")
         private val IS_LOGIN_KEY = booleanPreferencesKey("isLogin")
 
         fun getInstance(dataStore: DataStore<Preferences>): UserPreference {

@@ -53,13 +53,13 @@
             android:padding="8dp" />
 
         <Button
-            android:id="@+id/btnSave"
+            android:id="@+id/btnUpload"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:textSize="16sp"
             android:backgroundTint="@color/purple"
-            android:text="@string/btnSave"
+            android:text="@string/btnUpload"
             android:textColor="@android:color/white" />
     </LinearLayout>
 </ScrollView>

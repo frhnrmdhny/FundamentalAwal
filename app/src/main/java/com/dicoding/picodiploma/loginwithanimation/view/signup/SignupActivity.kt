@@ -15,26 +15,27 @@ import com.dicoding.picodiploma.loginwithanimation.view.ViewModelFactory
 class SignupActivity : AppCompatActivity() {
     private lateinit var binding: ActivitySignupBinding
     private lateinit var signupViewModel: SignupViewModel
-    private var alertDialog: AlertDialog? = null
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivitySignupBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        signupViewModel = ViewModelProvider(
+            this,
+            ViewModelFactory(this)
+        )[SignupViewModel::class.java]
+
+
         setupView()
         setupAction()
-        setupViewModel()
     }
 
-    private fun setupViewModel() {
-        val factory = ViewModelFactory.getInstance(this)
-        signupViewModel = ViewModelProvider(this, factory)[SignupViewModel::class.java]
 
-        // Observe loading state
-        signupViewModel.isLoading.observe(this) { isLoading ->
-            toggleProgressBar(isLoading)
-        }
+    private fun showLoading(isLoading: Boolean) {
+        binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+        binding.signupButton.isEnabled = !isLoading
     }
 
     private fun setupView() {
@@ -52,52 +53,46 @@ class SignupActivity : AppCompatActivity() {
 
     private fun setupAction() {
         binding.signupButton.setOnClickListener {
-            val email = binding.emailEditText.text.toString()
             val name = binding.nameEditText.text.toString()
-            val password = binding.passwordEditText.text.toString()
-
-            if (name.isEmpty() || email.isEmpty() || password.isEmpty()) {
-                Toast.makeText(this, "Error! Semua harus diisi dengan benar!", Toast.LENGTH_SHORT)
-                    .show()
+            val email = binding.emailEditText.text.toString()
+            if (email.isEmpty() || email.length < 8) {
+                binding.passwordEditText.error = "Wrong format email!"
                 return@setOnClickListener
             }
 
-            // Trigger register logic
-            signupViewModel.register(name, email, password)
+            val password = binding.passwordEditText.text.toString()
 
-            signupViewModel.registerResponse.observe(this@SignupActivity) { response ->
-                if (!response.error) {
-                    showSuccessDialog()
-                    signupViewModel.registerResponse.removeObservers(this@SignupActivity)
+            if (password.isEmpty() || password.length < 8) {
+                binding.passwordEditText.error = "Password must be at least 8 characters long."
+                return@setOnClickListener
+            }
+
+            showLoading(true)
+
+            // Panggil API register melalui AuthViewModel
+            signupViewModel.register(name, email, password) { success, message ->
+                showLoading(false)
+                if (success) {
+                    Toast.makeText(this, "Register Success!: $message", Toast.LENGTH_SHORT).show()
                 } else {
-                    Toast.makeText(
-                        this,
-                        "Error! Pendaftaran gagal: ${response.message}",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    Toast.makeText(this, "Register Failed!: $message", Toast.LENGTH_SHORT).show()
+                }
+
+
+                if (success && !isFinishing && !isDestroyed) {
+                    AlertDialog.Builder(this).apply {
+                        setTitle("Yeah!")
+                        setMessage("Akun berhasil dibuat dan siap jadi nih. Yuk, login!.")
+                        setPositiveButton("Lanjut bang") { _, _ ->
+                            finish()
+                        }
+                        create()
+                        show()
+                    }
                 }
             }
         }
     }
 
-    private fun toggleProgressBar(isLoading: Boolean) {
-        binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
-        binding.signupButton.isEnabled = !isLoading
-    }
-
-    private fun showSuccessDialog() {
-        alertDialog = AlertDialog.Builder(this).apply {
-            setTitle("Yeah!")
-            setMessage("Akun berhasil dibuat. Silahkan Login!")
-            setPositiveButton("Login") { _, _ -> finish() }
-        }.create()
-        alertDialog?.show()
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        alertDialog?.dismiss()
-        alertDialog = null
-    }
 }
 

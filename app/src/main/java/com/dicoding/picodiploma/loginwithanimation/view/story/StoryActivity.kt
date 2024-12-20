@@ -7,7 +7,6 @@ import com.dicoding.picodiploma.loginwithanimation.databinding.ActivityStoryBind
 
 
 class StoryActivity : AppCompatActivity() {
-
     private lateinit var binding: ActivityStoryBinding
     private lateinit var userPreference: UserPreference
 
@@ -21,11 +20,9 @@ class StoryActivity : AppCompatActivity() {
         binding.btnCamera.setOnClickListener {
 
         }
-        binding.btnSave.setOnClickListener {
-            //
+        binding.btnUpload.setOnClickListener {
+
         }
 
     }
-
-
 }

@@ -11,6 +11,9 @@
     <string name="message_login_page">Input email dan password untuk masuk</string>
     <string name="title_login_page">Login DreamGuard</string>
     <string name="name">Nama</string>
+    <string name="msg_title">Yeay!</string>
+    <string name="msg_sub_title">Kamu berhasil login!</string>
+    <string name="msg_button">Lanjut</string>
     <string name="message_main_page">Selamat Belajar di Dicoding.</string>
     <string name="greeting">Halo %1$s,</string>
     <string name="logout">Keluar</string>
@@ -23,6 +26,6 @@
     <string name="desc">Description</string>
     <string name="btnCamera">Camera</string>
     <string name="btnGallery">Gallery</string>
-    <string name="btnSave">Save</string>
     <string name="addDescription">Tambahkan deskripsi disini</string>
+    <string name="btnUpload">Upload</string>
 </resources>

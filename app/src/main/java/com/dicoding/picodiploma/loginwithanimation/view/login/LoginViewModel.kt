@@ -1,57 +1,41 @@
 package com.dicoding.picodiploma.loginwithanimation.view.login
 
-import android.util.Log
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import com.dicoding.picodiploma.loginwithanimation.data.UserRepository
 import com.dicoding.picodiploma.loginwithanimation.data.pref.UserModel
+import com.dicoding.picodiploma.loginwithanimation.data.remote.Results
+import com.dicoding.picodiploma.loginwithanimation.data.remote.response.LoginResult
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 
-class LoginViewModel(private val repository: UserRepository) : ViewModel() {
-    private val _loginResult = MutableLiveData<LoginResult>()
-    val loginResult: LiveData<LoginResult> get() = _loginResult
+class LoginViewModel(private val userRepository: UserRepository) : ViewModel() {
 
-    private val _isLoading = MutableLiveData<Boolean>()
-    val isLoading: LiveData<Boolean> get() = _isLoading
+    fun login(email: String, password: String): LiveData<Results<LoginResult>> {
+        return userRepository.loginAccount(email, password).asLiveData()
+    }
 
-    private val _errorMessage = MutableLiveData<String>()
-    val errorMessage: LiveData<String> get() = _errorMessage
-
-    data class LoginResult(
-        val isSuccessful: Boolean,
-        val message: String,
-        val token: String? = null,
-    )
-
-    fun login(email: String, password: String) {
-        _isLoading.value = true
+    fun saveToken(token: String) {
         viewModelScope.launch {
             try {
-                val response = repository.login(email, password)
-
-                if (response.error) {
-                    _loginResult.value = LoginResult(false, response.message)
-                } else {
-                    val user = UserModel(
-                        email = email,
-                        token = response.loginResult.token,
-                        userId = response.loginResult.userId,
-                        name = response.loginResult.name,
-                        isLogin = true
-                    )
-                    repository.saveSession(user)
-                    _loginResult.value =
-                        LoginResult(true, "Login berhasil", response.loginResult.token)
-                }
+                userRepository.saveToken(token)
             } catch (e: Exception) {
-                _errorMessage.value = "Login gagal: ${e.localizedMessage}"
-                _loginResult.value = LoginResult(false, "Error! Harap coba lagi nanti.")
-            } finally {
-                _isLoading.value = false
+                // Handle error jika diperlukan
             }
         }
+    }
+
+    fun getUserSession(onResult: (UserModel?) -> Unit) {
+        viewModelScope.launch {
+            val userSession = userRepository.getSession().first()
+            onResult(userSession)
+        }
+    }
+
+    fun saveSession(userModel: UserModel) = viewModelScope.launch {
+        userRepository.saveSession(userModel)
     }
 }

@@ -3,37 +3,48 @@ package com.dicoding.picodiploma.loginwithanimation.view.login
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.view.WindowInsets
 import android.view.WindowManager
-import android.widget.ProgressBar
 import android.widget.Toast
-import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.ViewModelProvider
+import com.dicoding.picodiploma.loginwithanimation.R
+import com.dicoding.picodiploma.loginwithanimation.data.pref.UserModel
+import com.dicoding.picodiploma.loginwithanimation.data.remote.Results
 import com.dicoding.picodiploma.loginwithanimation.databinding.ActivityLoginBinding
 import com.dicoding.picodiploma.loginwithanimation.view.ViewModelFactory
 import com.dicoding.picodiploma.loginwithanimation.view.home.HomeActivity
 
 class LoginActivity : AppCompatActivity() {
-    private val viewModel by viewModels<LoginViewModel> {
-        ViewModelFactory.getInstance(this)
-    }
+
     private lateinit var binding: ActivityLoginBinding
-    private lateinit var progressBar: ProgressBar
-    private var alertDialog: AlertDialog? = null
+    private lateinit var loginViewModel: LoginViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        progressBar = binding.progressBar
+        loginViewModel = ViewModelProvider(
+            this,
+            ViewModelFactory(this)
+        )[LoginViewModel::class.java]
+
+
+        loginViewModel.getUserSession { userSession ->
+            userSession?.let {
+                binding.emailEditText.setText(userSession.email)
+                binding.passwordEditText.setText(userSession.password)
+            } ?: run {
+                binding.emailEditText.setText("")
+                binding.passwordEditText.setText("")
+            }
+        }
 
         setupView()
         setupAction()
-        setupObservers()
     }
 
     private fun setupView() {
@@ -49,59 +60,62 @@ class LoginActivity : AppCompatActivity() {
         supportActionBar?.hide()
     }
 
-    private fun showErrorDialog(message: String) {
-        alertDialog?.dismiss()
-        alertDialog = AlertDialog.Builder(this)
-            .setTitle("Gagal Login!")
-            .setMessage(message)
-            .setPositiveButton("OK", null)
-            .create()
-        alertDialog?.show()
-    }
-
     private fun setupAction() {
         binding.loginButton.setOnClickListener {
             val email = binding.emailEditText.text.toString()
-            val password = binding.passwordEditText.text.toString()
-
-            if (email.isEmpty() || password.isEmpty()) {
-                showErrorDialog("Email dan password harus diisi!")
+            if (email.isEmpty() || email.length < 8) {
+                binding.passwordEditText.error = "Format Email tidak sesuai"
                 return@setOnClickListener
             }
+            val password = binding.passwordEditText.text.toString()
 
-            viewModel.login(email, password)
-        }
-    }
+            if (password.isEmpty() || password.length < 8) {
+                binding.passwordEditText.error = "Password harus minimal 8 karakter"
+                return@setOnClickListener
+            }
+            loginViewModel.login(email, password).observe(this) { result ->
+                when (result) {
+                    is Results.Error -> {
+                        binding.progressBar.visibility = View.GONE
+                        Toast.makeText(this, result.error, Toast.LENGTH_SHORT).show()
+                    }
 
-    private fun setupObservers() {
-        viewModel.loginResult.observe(this) { result ->
-            if (result.isSuccessful) {
-                val token = result.token
-                Log.d("LoginActivity", "Token : $token")
-                val intent = Intent(this, HomeActivity::class.java).apply {
-                    putExtra("TOKEN", token)
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    is Results.Loading -> {
+                        binding.progressBar.visibility = View.VISIBLE
+                    }
+
+                    is Results.Success -> {
+                        binding.progressBar.visibility = View.GONE
+                        result.data
+                        loginViewModel.run {
+                            saveToken(result.data.token)
+                            saveSession(
+                                UserModel(
+                                    email = email,
+                                    token = result.data.token,
+                                    password = password,
+                                    isLogin = true
+                                )
+                            )
+                        }
+                        AlertDialog.Builder(this).apply {
+                            setTitle(getString(R.string.msg_title))
+                            setMessage(getString(R.string.msg_sub_title))
+                            setPositiveButton(getString(R.string.msg_button)) { _, _ ->
+                                val intent = Intent(this@LoginActivity, HomeActivity::class.java)
+                                intent.flags =
+                                    Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
+                                startActivity(intent)
+                                finish()
+                            }
+                            create()
+                            show()
+                        }
+                    }
                 }
-                startActivity(intent)
-                finish()
-            } else {
-                showErrorDialog(result.message)
             }
         }
-
-        viewModel.isLoading.observe(this) { isLoading ->
-            progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
-            binding.loginButton.isEnabled = !isLoading
-        }
-
-        viewModel.errorMessage.observe(this) { errorMessage ->
-            Toast.makeText(this, errorMessage, Toast.LENGTH_LONG).show()
-        }
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        alertDialog?.dismiss() // Hapus referensi dialog
-        alertDialog = null
-    }
+
 }
