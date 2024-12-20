@@ -28,4 +28,6 @@
     <string name="btnGallery">Gallery</string>
     <string name="addDescription">Tambahkan deskripsi disini</string>
     <string name="btnUpload">Upload</string>
+    <string name="request_permission">\"Izin diperlukan untuk menggunakan kamera dan galeri\"</string>
+    <string name="error_selectImage">Pilih foto terlebih dahulu!</string>
 </resources>

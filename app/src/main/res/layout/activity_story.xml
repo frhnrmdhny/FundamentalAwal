@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/main"
+    android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="16dp">
 
@@ -17,27 +18,27 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:contentDescription="@string/image"
-            android:minHeight="370dp"
+            android:minHeight="300dp"
             android:src="@drawable/baseline_image_24" />
 
 
         <Button
             android:id="@+id/btnCamera"
-            android:textSize="16sp"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:backgroundTint="@color/purple"
             android:text="@string/btnCamera"
-            android:textColor="@android:color/white" />
+            android:textColor="@android:color/white"
+            android:textSize="16sp" />
 
         <Button
             android:id="@+id/btnGallery"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:backgroundTint="@color/purple"
-            android:textSize="16sp"
             android:text="@string/btnGallery"
-            android:textColor="@android:color/white" />
+            android:textColor="@android:color/white"
+            android:textSize="16sp" />
 
 
         <EditText
@@ -57,9 +58,20 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:textSize="16sp"
             android:backgroundTint="@color/purple"
             android:text="@string/btnUpload"
-            android:textColor="@android:color/white" />
+            android:textColor="@android:color/white"
+            android:textSize="16sp" />
+
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
     </LinearLayout>
 </ScrollView>
